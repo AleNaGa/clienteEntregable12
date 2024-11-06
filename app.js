@@ -42,7 +42,8 @@ function checkJSON(array){
 
 //Renderizar en una tabla con los TH como las claves del JSON y los TD con los valores
 function renderFields(array, allKeys){
-    console.log(array[0]);
+    document.getElementById('form').innerHTML = '';
+    document.getElementById('formEdit').innerHTML = '';
     const tableDiv = document.getElementById('tablediv');
     tableDiv.innerHTML = '';
     const table = document.createElement('table');
@@ -64,19 +65,22 @@ function renderFields(array, allKeys){
             tr.appendChild(td);
            
         }
+
+        //BOTON DE BORRAR
         const deleteButton = document.createElement('button');
             deleteButton.classList.add('button');
             deleteButton.textContent = 'Delete';
-            deleteButton.addEventListener('click', () => {
-                deleteField(array[0]);
-            });
+            deleteButton.onclick = () => {// el onclick evita el eventListener 'click' re Renderizandose
+                deleteField(getID(element));
+            };
         tr.appendChild(deleteButton);
+        //BOTON DE EDITAR
         const editButton = document.createElement('button');
             editButton.classList.add('button');
             editButton.textContent = 'Edit';
-            editButton.addEventListener('click', () => {
-                editField(array[0], element);
-            });
+            editButton.onclick = () => { // el onclick evita el eventListener 'click' re Renderizandose
+                editField(getID(element), element);
+            };
         tr.appendChild(editButton);
         table.appendChild(tr);
     });
@@ -111,7 +115,9 @@ function getFields($url){
 function createForm(allKeys){
     let form = document.getElementById('form');
     form.innerHTML = '';
-    console.log("creando el Form");
+    let title = document.createElement('h4');
+    title.innerHTML = 'formulario de inserción';
+    form.appendChild(title);
     allKeys.forEach(element => {
         const label = document.createElement('label');
         label.textContent = element;
@@ -126,7 +132,7 @@ function createForm(allKeys){
     submit.type = 'submit';
     submit.value = 'Submit';
     form.appendChild(submit);
-    form.addEventListener('submit', (event) => {
+    form.onsubmit = ((event) => {
         event.preventDefault();
         const formData = new FormData(form);
         const data = {};
@@ -170,7 +176,8 @@ function addField(data) {
 
 //Borrar campo con el id de la fila que queremos borrar
 function deleteField(id) {
-    fetch(url + pathToDelete + id, {
+    const realPath = pathToDelete.replace(/\{[^}]+\}/, id);
+    fetch(url + realPath, {
         method: 'DELETE',
     }).then((data) => {
         console.log(data);
@@ -189,8 +196,10 @@ function editField(id, data) {
 
     const form = document.getElementById('formEdit');
     form.innerHTML = '';
-    console.log("creando el Form nuevo");
-
+    
+    let title = document.createElement('h4');
+    title.innerHTML = 'formulario de Edición de ' + id;
+    form.appendChild(title);
     for (const key in data) {
         const label = document.createElement('label');
         label.textContent =key
@@ -206,7 +215,7 @@ function editField(id, data) {
     submit.type = 'submit';
     submit.value = 'Submit';
     form.appendChild(submit);
-    form.addEventListener('submit', (event) => {
+    form.onsubmit = ('submit', (event) => {// on submit evita el eventListener re Renderizandose
         event.preventDefault();
         const formData = new FormData(form);
         const data = {};
@@ -221,7 +230,8 @@ function editField(id, data) {
 
 // PUT UPDATE DE EDIT
 function updateField(id, data) {
-    fetch(url + pathToEdit + id, {
+    const realPathUpd = pathToEdit.replace(/\{[^}]+\}/, id);
+    fetch(url + realPathUpd, {
         method: 'PUT',
         mode: 'cors',
         headers: {
@@ -235,4 +245,13 @@ function updateField(id, data) {
     }).catch((error) => {
         console.log(error);
     });
+}
+
+//Encontrar el ID en el JSON para editar y borrar
+function getID(array){
+    for (key in array) {
+        if(key.toLowerCase().includes('id')){
+            return array[key];
+        }
+    }
 }
